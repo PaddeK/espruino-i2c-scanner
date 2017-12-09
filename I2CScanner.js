@@ -1,52 +1,61 @@
 'use strict';
 
 const
+    Progress = '|/-\\',
     Version = '0.1.0',
-    DefaultOptions = {
-        serial: USB,
+    Defaults = {
+        i2c: null,
+        serial: null,
         printAll: true,
         header: true,
+        findOne: false,
         earlyCancel: true,
         startAddress: 0,
         endAddress: 127,
-        speeds: [100, 200, 400, 800]
+        speeds: [100, 200, 400, 800],
+        showProgress: true,
+        noneFound: '.',
+        canceled: 'x',
+        found: 'V'
     };
 
-let I2CScanner;
-
-I2CScanner = function (i2c, options)
+module.exports.scan = function (options)
 {
-    this.opts = Object.assign(DefaultOptions, options || {});
+    let prog, pad, startTime = Date.now(), count = 0, i = 0, header = '', o = Object.assign(Defaults, options || {});
 
-    this.i2c = i2c;
-    this.opts.speeds = (Array.isArray(this.opts.speeds) ? this.opts.speeds : [this.opts.speeds]).sort();
-};
+    o.speeds = (Array.isArray(o.speeds) ? o.speeds : [o.speeds]).sort();
 
-I2CScanner.prototype.scan = function ()
-{
-    let startTime = Date.now(), count = 0, that = this, header = '',
-        pad = (s, p, ps = ' ') => this.opts.serial.print(((new Array(p + 1)).join(ps) + s).slice(-1 * p));
-
-    if (this.opts.header) {
-        this.opts.serial.println(' ');
-        this.opts.serial.println(`I2C Scanner v${Version}`);
-        this.opts.serial.println(' ');
-        header += 'TIME DEC  HEX';
-        header = this.opts.speeds.reduce((p, speed) => p + ` ${speed}`, header);
-        header += ' [KHz]';
-        this.opts.serial.println(header);
-        pad(' ', header.length + 1, '-');
-        this.opts.serial.println(' ');
+    if (!(o.serial instanceof Serial) || !(o.i2c instanceof I2C)) {
+        throw new Error('Please define Options.serial and Options.i2c appropriately');
     }
 
-    for (let address = this.opts.startAddress; address <= this.opts.endAddress; address++) {
-        let found = [], fnd = false, printLine = this.opts.printAll;
+    prog = () => o.serial.print(`\r${Progress[i = ++i % Progress.length]}${(new Array(header.length)).join(' ')}`);
+    pad = (s, p, ps = ' ') => o.serial.print(((new Array(p + 1)).join(ps) + s).slice(-1 * p));
 
-        this.opts.speeds.some((speed, index) => {
-            that.i2c.setup(Object.assign(that.i2c._options, {bitrate: speed * 1000}));
+    header += 'TIME DEC  HEX';
+    header = o.speeds.reduce((p, speed) => p + ` ${speed}`, header);
+    header += ' [KHz]';
+
+    if (o.header) {
+        o.serial.println(' ');
+        o.serial.println(`I2C Scanner v${Version}`);
+        o.serial.println(' ');
+        o.serial.println(`Legend: ${o.noneFound} = none found, ${o.canceled} = canceled, ${o.found} = found`);
+        o.serial.println(' ');
+        o.serial.println(header);
+        pad(' ', header.length + 1, '-');
+        o.serial.println(' ');
+    }
+
+    for (let address = o.startAddress; address <= o.endAddress;) {
+        let found = [], fnd = false, printLine = o.printAll;
+
+        o.speeds.some((speed, index) => {
+            o.showProgress && prog();
+            o.i2c.setup(Object.assign(o.i2c._options, {bitrate: speed * 1000}));
 
             try {
-                that.i2c.writeTo(address, 0);
+                o.i2c.writeTo(address, 0);
                 found[index] = 'V';
             } catch (e) {
                 found[index] = '.';
@@ -54,29 +63,29 @@ I2CScanner.prototype.scan = function ()
 
             fnd |= found[index] === 'V';
 
-            return !fnd && that.opts.earlyCancel;
+            return !fnd && o.earlyCancel;
         });
 
         count += ~~fnd;
         printLine |= fnd;
 
         if (printLine) {
+            o.serial.print('\r');
             pad(Math.round((Date.now() - startTime) / 1000), 4, ' ');
             pad(`${address}`, 4, ' ');
             pad(`${'0x' + ('0' + (address).toString(16)).slice(-2).toUpperCase()}`, 5, ' ');
-            this.opts.speeds.forEach((speed, index) => pad(found[index] || 'x', 4, ' '));
-            this.opts.serial.println('');
+            o.speeds.forEach((speed, index) => pad(found[index] || 'x', 4, ' '));
+            o.serial.println('');
         }
+
+        address += o.findOne && fnd ? o.endAddress : 1;
     }
 
-    if (this.opts.header) {
+    if (o.header) {
         pad(' ', header.length + 1, '-');
-        this.opts.serial.println('');
+        o.serial.println('');
         pad(`${count} devices found in ${Math.round((Date.now() - startTime) / 1000)} seconds.`, header.length, ' ');
-        this.opts.serial.println(' ');
-        this.opts.serial.println(' ');
+        o.serial.println(' ');
+        o.serial.println(' ');
     }
 };
-
-
-module.exports = I2CScanner;
