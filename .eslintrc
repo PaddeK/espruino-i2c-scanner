@@ -1,0 +1,89 @@
+{
+    "env": {
+        "es6": true,
+        "node": true
+    },
+    "root": true,
+    "extends": "eslint:recommended",
+    "rules": {
+        "no-console": "off",
+        "require-jsdoc": [
+            "error",
+            {
+                "require": {
+                    "FunctionDeclaration": true,
+                    "MethodDefinition": true,
+                    "ClassDeclaration": false,
+                    "ArrowFunctionExpression": false
+                }
+            }
+        ],
+        "max-len": [
+            "error",
+            {
+                "code": 120,
+                "tabWidth": 4,
+                "ignoreComments": true
+            }
+        ],
+        "valid-jsdoc": [
+            "error",
+            {
+                "requireReturn": true,
+                "matchDescription": ".+",
+                "requireParamDescription": false,
+                "requireReturnDescription": false
+            }
+        ],
+        "no-trailing-spaces": [
+            "error",
+            {
+                "skipBlankLines": false
+            }
+        ],
+        "no-bitwise": "off",
+        "camelcase": "error",
+        "curly": "error",
+        "eqeqeq": "error",
+        "guard-for-in": "error",
+        "wrap-iife": [
+            "error",
+            "any"
+        ],
+        "no-use-before-define": [
+            "error",
+            {
+                "functions": false
+            }
+        ],
+        "new-cap": "error",
+        "no-caller": "error",
+        "no-empty": "error",
+        "no-new": "error",
+        "quotes": [
+            "error",
+            "single"
+        ],
+        "no-undef": "error",
+        "no-unused-vars": "error",
+        "strict": [
+            "error",
+            "global"
+        ],
+        "no-cond-assign": [
+            "error",
+            "except-parens"
+        ],
+        "comma-style": [
+            "error",
+            "last"
+        ],
+        "indent": [
+            "error",
+            4,
+            {
+                "SwitchCase": 1
+            }
+        ]
+    }
+}
