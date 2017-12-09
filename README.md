@@ -19,7 +19,7 @@ I2CScanner.scan({i2c: I2C1, serial: USB});
     header: true,                   // Print header/footer of result table
     printAll: true,                 // Print every scan result (true) or only results with a found device (false)
     showProgress: true,             // Show progress indication (true) or suppress progress indication (false)
-    findOne: false,                 // Stop scan if a device is found (true) or scan complete address range (false)
+    findOne: false,                 // Stop scan if device is found (true) or scan complete address range (false)
     earlyCancel: true,              // Skip speeds after first failure (true) or always try all speeds (false)
     startAddress: 0,                // Start address of address range to scan for devices
     endAddress: 127,                // End address of address range to scan for devices
